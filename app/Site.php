@@ -107,6 +107,75 @@ class SiteSearch {
 
 	}
 
+	public function save_all_users(){
+
+		// Get total number of pages
+		$total_pages = ApiResponsePage::get_total_pages($this->users_endpoint);
+
+		// Start from the earliest comments
+		$pages = range($total_pages, 1);
+
+		foreach ($pages as $page_num){
+
+			echo "Processing page $page_num" . "\r\n";
+
+			// Get comments data
+			$api_page = new ApiResponsePage($this->users_endpoint, $page_num);
+			$data = $api_page->get_data();
+
+			// No data? Not sure why this would ever happen, but it seems to
+			if (!$data || !is_array($data)){
+				echo "No data for page" . "\r\n";
+				continue;
+			}
+
+			// Save to DB
+			foreach ($data as $user){
+
+				$gravatar_url = $user->avatar_urls->{24} ?? '';
+				$email_hash = $this->extract_hash_from_gravatar($gravatar_url) ?? '';
+
+				$email = $this->get_email_from_hash($email_hash);
+
+				// If you can't figure out the email, stop
+				if (!$email){
+					continue;
+				}
+
+				try {
+
+					$name = html_entity_decode($user->name, ENT_COMPAT, 'UTF-8') ?? '';
+					$domain = str_replace(['http://', 'http://www.', 'https://', 'https://www.'], '', $this->url);
+					$name_with_site = $name . ' (' . $domain . ')';
+
+					DB::table('emails')->insert([
+						'email' => $email,
+						'hash' => $email_hash,
+						'description' => $name_with_site,
+						'type' => "Imported from $domain"
+					]);
+
+				} catch (\Exception $e) {
+					error_log($e->getMessage());
+					echo '.';
+				}
+
+			}
+
+		}
+
+	}
+
+	protected function get_email_from_hash($hash){
+
+		$hash_db = \DB::connection('hashes');
+
+		$email = $hash_db->table('emails')->where('hash', $hash)->pluck('emails');
+
+		return $email[0] ?? false;
+
+	}
+
 	public function save_all_comments(){
 
 		// Get total number of pages
