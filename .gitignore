@@ -16,3 +16,4 @@ yarn-error.log
 /.phpintel/6330418b3f55544e4e032c89a538fb67
 /.phpintel/index
 /deploy-to-production.php
+.phpintel/
