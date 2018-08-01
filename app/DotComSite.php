@@ -12,7 +12,7 @@ class DotComSite extends Site {
 	protected function save_comments_data_page($data){
 
 		// No data? Not sure why this would ever happen, but it seems to
-		if (!$data->comments || !is_array($data->comments)){
+		if (!isset($data->comments) || !$data->comments || !is_array($data->comments)){
 			echo "No data for page" . "\r\n";
 			return false;
 		}
