@@ -14,6 +14,16 @@ class Url {
 		$this->api_url = $this->get_api_index($this->clean_url);
 	}
 
+	public function get_dot_com_comments_endpoint(){
+
+		// Get bare host - this usually (always?) is the "site" variable in the wordpress.com endpoints
+		$parse = parse_url($url);
+		$host = $parse['host'];
+
+		return "https://public-api.wordpress.com/rest/v1.1/sites/$host/comments";
+
+	}
+
 	public function get_comments_endpoint(){
 
 		// Try to use the "official" discovery tool

@@ -186,6 +186,12 @@ class Site {
 		$total_pages = ApiResponsePage::get_total_pages($this->comments_endpoint);
 
 		// Determine order - oldest first is default
+
+		if (!$total_pages){
+			echo "Sorry, no comments found" . "\r\n";
+			return false;
+		}
+
 		if ($this->newest_first){
 			$pages = range(1, $total_pages);
 		}
@@ -201,48 +207,54 @@ class Site {
 			$api_page = new ApiResponsePage($this->comments_endpoint, $page_num);
 			$data = $api_page->get_data();
 
-			// No data? Not sure why this would ever happen, but it seems to
-			if (!$data || !is_array($data)){
-				echo "No data for page" . "\r\n";
-				continue;
-			}
+			// Save comments in page
+			$this->save_comments_data_page($data);
 
-			// Save to DB
-			foreach ($data as $comment){
+		}
 
-				try {
+	}
+	///////////////
+	// Protected //
+	///////////////
 
-					$gravatar_url = $comment->author_avatar_urls->{24} ?? '';
-					$email_hash = $this->extract_hash_from_gravatar($gravatar_url) ?? '';
-					$content = html_entity_decode($comment->content->rendered, ENT_COMPAT, 'UTF-8') ?? '';
+	protected function save_comments_data_page($data){
 
-					DB::table('comments')->insert([
-						'comments_endpoint' => $this->comments_endpoint,
-						'comment_id' => $comment->id ?? '',
-						'post_id' => $comment->post ?? '',
-						'date_gmt' => $comment->date_gmt ?? '',
-						'content' => $content,
-						'link' => $comment->link ?? '',
-						'author_name' => $comment->author_name ?? '',
-						'author_url' => $comment->author_url ?? '',
-						'gravatar' => $gravatar_url,
-						'email_hash' => $email_hash
-					]);
+		// No data? Not sure why this would ever happen, but it seems to
+		if (!$data || !is_array($data)){
+			echo "No data for page" . "\r\n";
+			return false;
+		}
 
-				} catch (\Exception $e) {
-					error_log($e->getMessage());
-					echo '.';
-				}
+		// Save to DB
+		foreach ($data as $comment){
 
+			try {
+
+				$gravatar_url = $comment->author_avatar_urls->{24} ?? '';
+				$email_hash = $this->extract_hash_from_gravatar($gravatar_url) ?? '';
+				$content = html_entity_decode($comment->content->rendered, ENT_COMPAT, 'UTF-8') ?? '';
+
+				DB::table('comments')->insert([
+					'comments_endpoint' => $this->comments_endpoint,
+					'comment_id' => $comment->id ?? '',
+					'post_id' => $comment->post ?? '',
+					'date_gmt' => $comment->date_gmt ?? '',
+					'content' => $content,
+					'link' => $comment->link ?? '',
+					'author_name' => $comment->author_name ?? '',
+					'author_url' => $comment->author_url ?? '',
+					'gravatar' => $gravatar_url,
+					'email_hash' => $email_hash
+				]);
+
+			} catch (\Exception $e) {
+				error_log($e->getMessage());
+				echo '.';
 			}
 
 		}
 
 	}
-
-	///////////////
-	// Protected //
-	///////////////
 
 	protected function extract_hash_from_gravatar($gravatar_url){
 

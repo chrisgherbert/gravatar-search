@@ -7,7 +7,7 @@ use \Curl\Curl;
 
 class ApiResponsePage {
 
-	public $user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1.1 Safari/605.1.15';
+	const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1.1 Safari/605.1.15';
 
 	protected $endpoint;
 	protected $page;
@@ -28,7 +28,7 @@ class ApiResponsePage {
 		$curl = new Curl;
 
 		// Set user agent
-		$curl->setUserAgent($this->user_agent);
+		$curl->setUserAgent(static::USER_AGENT);
 
 		// Follow server redirects
 		$curl->setOpt(CURLOPT_FOLLOWLOCATION, true);
@@ -63,13 +63,7 @@ class ApiResponsePage {
 
 	public static function get_total_pages($endpoint, $per_page = 100){
 
-		$curl = new Curl;
-
-		// Set user agent
-		$curl->setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1.1 Safari/605.1.15');
-
-		// Follow server redirects
-		$curl->setOpt(CURLOPT_FOLLOWLOCATION, true);
+		$curl = static::get_curl();
 
 		// Need to tell the server that we want these non-standard header values
 		$curl->setHeader("Access-Control-Expose-Headers", "X-WP-Total, X-WP-TotalPages");
@@ -89,6 +83,20 @@ class ApiResponsePage {
 			return $headers['x-wp-totalpages'];
 
 		}
+
+	}
+
+	protected static function get_curl(){
+
+		$curl = new Curl;
+
+		// Set user agent
+		$curl->setUserAgent(static::USER_AGENT);
+
+		// Follow server redirects
+		$curl->setOpt(CURLOPT_FOLLOWLOCATION, true);
+
+		return $curl;
 
 	}
 
