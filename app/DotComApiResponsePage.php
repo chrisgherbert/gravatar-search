@@ -4,7 +4,7 @@ namespace App;
 
 class DotComApiResponsePage extends ApiResponsePage {
 
-	public static function get_total_pages($endpoint, $per_page = 100){
+	public static function get_total_pages($endpoint, $per_page = 20){
 
 		$curl = static::get_curl();
 
