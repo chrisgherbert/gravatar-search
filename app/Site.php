@@ -5,7 +5,7 @@ namespace App;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
 
-class SiteSearch {
+class Site {
 
 	public $url;
 
