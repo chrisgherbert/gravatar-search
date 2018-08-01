@@ -82,6 +82,11 @@ class Url {
 	 */
 	protected function clean_url($url){
 
+		// Add http/https if missing
+		if (strpos($url, 'http://') === false && strpos($url, 'https://') === false){
+			$url = 'http://' . $url;
+		}
+
 		$url = trim($url);
 		$parts = parse_url($url);
 
@@ -89,6 +94,7 @@ class Url {
 
 		if (isset($parts['path'])){
 			$cleaned = $cleaned . $parts['path'];
+			$cleaned = rtrim( $cleaned, '/\\' );
 		}
 
 		return $cleaned;
