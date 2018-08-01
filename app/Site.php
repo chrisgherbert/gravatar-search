@@ -146,12 +146,16 @@ class SiteSearch {
 
 					$name = html_entity_decode($user->name, ENT_COMPAT, 'UTF-8') ?? '';
 					$domain = str_replace(['http://', 'http://www.', 'https://', 'https://www.'], '', $this->url);
-					$name_with_site = $name . ' (' . $domain . ')';
+					$description = $name . ' (' . $domain . ')';
+
+					if ($user->description){
+						$description = $description . ' - ' . $user->description;
+					}
 
 					DB::table('emails')->insert([
 						'email' => $email,
 						'hash' => $email_hash,
-						'description' => $name_with_site,
+						'description' => $description,
 						'type' => "Imported from $domain"
 					]);
 
