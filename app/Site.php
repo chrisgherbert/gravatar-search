@@ -15,6 +15,9 @@ class Site {
 	public $users_endpoint;
 	public $newest_first = false;
 
+	protected $api_response_page_class = 'App\ApiResponsePage';
+	protected $url_class = 'App\Url';
+
 	public function __construct($url){
 
 		// Basic info
@@ -70,7 +73,7 @@ class Site {
 
 	public function get_endpoints(){
 
-		$endpoints_obj = new Url($this->url);
+		$endpoints_obj = new $this->url_class($this->url);
 
 		return [
 			'comments_endpoint' => $endpoints_obj->get_comments_endpoint(),
@@ -82,7 +85,7 @@ class Site {
 	public function get_matching_comments(){
 
 		// Get total number of pages
-		$total_pages = ApiResponsePage::get_total_pages($this->comments_endpoint);
+		$total_pages = $this->api_response_page_class::get_total_pages($this->comments_endpoint);
 
 		$matching_comments = [];
 
@@ -93,7 +96,7 @@ class Site {
 
 			echo "Processing page $page_num" . "\r\n";
 
-			$api_page = new ApiResponsePage($this->comments_endpoint, $page_num);
+			$api_page = new $this->api_response_page_class($this->comments_endpoint, $page_num);
 
 			$data = $api_page->get_data();
 
@@ -103,14 +106,12 @@ class Site {
 
 		}
 
-		// return $matching_comments;
-
 	}
 
 	public function save_all_users(){
 
 		// Get total number of pages
-		$total_pages = ApiResponsePage::get_total_pages($this->users_endpoint);
+		$total_pages = $this->api_response_page_class::get_total_pages($this->users_endpoint);
 
 		// Start from the earliest comments
 		$pages = range($total_pages, 1);
@@ -120,7 +121,7 @@ class Site {
 			echo "Processing page $page_num" . "\r\n";
 
 			// Get comments data
-			$api_page = new ApiResponsePage($this->users_endpoint, $page_num);
+			$api_page = new $this->api_response_page_class($this->users_endpoint, $page_num);
 			$data = $api_page->get_data();
 
 			// No data? Not sure why this would ever happen, but it seems to
@@ -183,7 +184,7 @@ class Site {
 	public function save_all_comments(){
 
 		// Get total number of pages
-		$total_pages = ApiResponsePage::get_total_pages($this->comments_endpoint);
+		$total_pages = $this->api_response_page_class::get_total_pages($this->comments_endpoint);
 
 		// Determine order - oldest first is default
 
@@ -204,7 +205,7 @@ class Site {
 			echo "Processing page $page_num" . "\r\n";
 
 			// Get comments data
-			$api_page = new ApiResponsePage($this->comments_endpoint, $page_num);
+			$api_page = new $this->api_response_page_class($this->comments_endpoint, $page_num);
 			$data = $api_page->get_data();
 
 			// Save comments in page
