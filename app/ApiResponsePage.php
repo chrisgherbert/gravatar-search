@@ -43,7 +43,7 @@ class ApiResponsePage {
 		}
 		else {
 			$data = $curl->response;
-			Cache::put($this->get_cache_key(), $data, 10080 * 4); // Cache for one month
+			Cache::put($this->get_cache_key(), $data, 10080); // Cache for one week
 			return $data;
 		}
 
