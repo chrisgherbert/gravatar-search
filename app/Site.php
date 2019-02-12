@@ -13,7 +13,7 @@ class Site {
 	public $wait_between_requests = 0.2; // time in seconds to wait before next request
 	public $comments_endpoint;
 	public $users_endpoint;
-	public $newest_first = false;
+	public $newest_first = true;
 
 	protected $api_response_page_class = 'App\ApiResponsePage';
 	protected $url_class = 'App\Url';
