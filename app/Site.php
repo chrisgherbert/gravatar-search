@@ -14,6 +14,7 @@ class Site {
 	public $comments_endpoint;
 	public $users_endpoint;
 	public $newest_first = true;
+	public $skip_invalid_hash = true;
 
 	protected $api_response_page_class = 'App\ApiResponsePage';
 	protected $url_class = 'App\Url';
@@ -234,6 +235,13 @@ class Site {
 				$gravatar_url = $comment->author_avatar_urls->{24} ?? '';
 				$email_hash = $this->extract_hash_from_gravatar($gravatar_url) ?? '';
 				$content = html_entity_decode($comment->content->rendered, ENT_COMPAT, 'UTF-8') ?? '';
+
+				// If skipping invalid hashes, don't save to db unless there's a valid hash for the email
+				if ($this->skip_invalid_hash){
+					if (strlen($email_hash) !== 32){
+						continue;
+					}
+				}
 
 				DB::table('comments')->insert([
 					'comments_endpoint' => $this->comments_endpoint,
