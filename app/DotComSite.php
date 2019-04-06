@@ -25,6 +25,13 @@ class DotComSite extends Site {
 				$gravatar_url = $comment->author->avatar_URL ?? '';
 				$email_hash = $this->extract_hash_from_gravatar($gravatar_url) ?? '';
 
+				// If skipping invalid hashes, don't save to db unless there's a valid hash for the email
+				if ($this->skip_invalid_hash){
+					if (strlen($email_hash) !== 32){
+						continue;
+					}
+				}
+
 				DB::table('comments')->insert([
 					'comments_endpoint' => $this->comments_endpoint,
 					'comment_id' => $comment->ID ?? '',
