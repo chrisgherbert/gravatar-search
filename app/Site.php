@@ -203,7 +203,7 @@ class Site {
 
 		foreach ($pages as $page_num){
 
-			echo "Processing page $page_num" . "\r\n";
+			echo "Processing page $page_num ({$this->url})" . "\r\n";
 
 			// Get comments data
 			$api_page = new $this->api_response_page_class($this->comments_endpoint, $page_num);
