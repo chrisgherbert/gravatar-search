@@ -4,6 +4,7 @@ namespace App;
 
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
+use League\Csv\Writer;
 
 class Site {
 
@@ -106,6 +107,80 @@ class Site {
 			$matching_comments += $matches;
 
 		}
+
+	}
+
+	public function save_all_users_to_csv($filename = false){
+
+		// If filename isn't manually set, create one from the hostname and the date
+		if (!$filename){
+			$url_parts = parse_url($this->url);
+			$hostname = $url_parts['host'] ?? '';
+			$filename = $hostname . '-' . date('Y-m-d', strtotime('now')) . '.csv';
+		}
+
+		// Get total number of pages
+		$total_pages = $this->api_response_page_class::get_total_pages($this->users_endpoint);
+
+		// Start from the earliest users
+		$pages = range($total_pages, 1);
+
+		// Create CSV file
+
+		$csv = Writer::createFromString('');
+
+		$header = ['name', 'link', 'id', 'description', 'hash', 'email'];
+
+		$csv->insertOne($header);
+
+		foreach ($pages as $page_num){
+
+			echo "Processing page $page_num" . "\r\n";
+
+			// Get comments data
+			$api_page = new $this->api_response_page_class($this->users_endpoint, $page_num);
+			$data = $api_page->get_data();
+
+			// No data? Not sure why this would ever happen, but it seems to
+			if (!$data || !is_array($data)){
+				echo "No data for page" . "\r\n";
+				continue;
+			}
+
+			// Add users to CSV
+			foreach ($data as $user){
+
+				$gravatar_url = $user->avatar_urls->{24} ?? '';
+				$email_hash = $this->extract_hash_from_gravatar($gravatar_url) ?? '';
+
+				$email = $this->get_email_from_hash($email_hash);
+
+				try {
+
+					$name = html_entity_decode($user->name, ENT_COMPAT, 'UTF-8') ?? '';
+					$link = $user->link;
+					$id = $user->id;
+					$description = $user->description ?? '';
+
+					$csv->insertOne([
+						$name,
+						$link,
+						$id,
+						$description,
+						$email_hash,
+						$email ?? ''
+					]);
+
+				} catch (\Exception $e) {
+					error_log($e->getMessage());
+					echo '.';
+				}
+
+			}
+
+		}
+
+		file_put_contents($filename, $csv->getContent());
 
 	}
 
@@ -219,12 +294,34 @@ class Site {
 	// Protected //
 	///////////////
 
+	public static function clean_json_data($data){
+
+		// $data = trim($data);
+		// $data = rtrim($data, "\0");
+		// $data = stripslashes(html_entity_decode($data));
+		// $data = iconv('UTF-8', 'UTF-8//IGNORE', utf8_encode($data));
+
+		$data = json_decode(html_entity_decode(urldecode(filter_input(INPUT_GET, 'ft', FILTER_SANITIZE_STRING))));
+
+		return json_encode($data);
+
+	}
+
 	protected function save_comments_data_page($data){
 
 		// No data? Not sure why this would ever happen, but it seems to
-		if (!$data || !is_array($data)){
+		if (!$data){
 			echo "No data for page" . "\r\n";
 			return false;
+		}
+
+		// Sometimes data isn't properly converted from JSON
+		if (!is_array($data)){
+			$data = self::clean_json_data($data);
+			if (!is_array($data)){
+				echo "JSON encoding issue" . "\r\n";
+				return false;
+			}
 		}
 
 		// Save to DB
